@@ -1,6 +1,7 @@
 package rundeck
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"strconv"
@@ -69,10 +70,11 @@ func (c *RundeckClient) ListRunningExecutions(projectId string) (executions Exec
 func (c *RundeckClient) DeleteExecutions(ids []string) (ExecutionsDeleted, error) {
 	var res []byte
 	var data ExecutionsDeleted
-	opts := make(map[string]string)
-	opts["ids"] = strings.Join(ids, ",")
-	opts["content_type"] = "application/x-www-form-urlencoded"
-	err := c.Post(&res, "executions/delete", nil, opts)
+	opts, err := json.Marshal(ids)
+	if err != nil {
+		return data, err
+	}
+	err = c.Post(&res, "executions/delete", opts, map[string]string{"content_type": "application/json"})
 	xml.Unmarshal(res, &data)
 	return data, err
 }
